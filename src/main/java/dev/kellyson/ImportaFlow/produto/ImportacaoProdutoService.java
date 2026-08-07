@@ -9,8 +9,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,14 @@ public class ImportacaoProdutoService {
             InputStream conteudoArquivo = arquivo.getInputStream();
 
             List<Produto> produtos = leitorCsvProduto.ler(conteudoArquivo);
+
+            if (produtos.isEmpty()) {
+                throw new BadRequestException(
+                        "O arquivo não possui produtos para importação."
+                );
+            }
+
+            validarSkusRepetidos(produtos);
 
             Optional<Produto> produtoDuplicado = produtos.stream()
                     .filter(produto -> produtoRepository.existsBySku(produto.getSku()))
@@ -54,6 +64,20 @@ public class ImportacaoProdutoService {
                     "Não foi possível importar o arquivo.",
                     exception
             );
+        }
+    }
+
+    private void validarSkusRepetidos(List<Produto> produtos) {
+        Set<String> skusEncontrados = new HashSet<>();
+
+        for (Produto produto : produtos) {
+            boolean skuAdicionado = skusEncontrados.add(produto.getSku());
+
+            if (skuAdicionado == false) {
+                throw new BadRequestException(
+                        "O SKU " + produto.getSku() + " está repetido no arquivo."
+                );
+            }
         }
     }
 }
