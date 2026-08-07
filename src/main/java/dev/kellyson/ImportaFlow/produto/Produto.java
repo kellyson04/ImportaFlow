@@ -34,4 +34,11 @@ public class Produto {
 
     @Column(nullable = false)
     private Integer estoque;
+
+    public Produto(String sku, String nome, BigDecimal preco, Integer estoque) {
+        this.sku = sku;
+        this.nome = nome;
+        this.preco = preco;
+        this.estoque = estoque;
+    }
 }
