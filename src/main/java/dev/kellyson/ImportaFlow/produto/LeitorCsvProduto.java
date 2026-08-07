@@ -32,10 +32,25 @@ public class LeitorCsvProduto {
             String[] colunas = leitorCsv.readNext();
 
             while (colunas != null) {
+                if (colunas.length != 4) {
+                    throw new BadRequestException(
+                            "Cada linha do CSV deve possuir exatamente 4 colunas."
+                    );
+                }
+
                 String sku = colunas[0].trim();
                 String nome = colunas[1].trim();
+
+                if (sku.isEmpty()) {
+                    throw new BadRequestException("O SKU não pode estar vazio.");
+                }
+
+                if (nome.isEmpty()) {
+                    throw new BadRequestException("O nome não pode estar vazio.");
+                }
+
                 BigDecimal preco = converterPreco(colunas[2]);
-                Integer estoque = Integer.valueOf(colunas[3].trim());
+                Integer estoque = converterEstoque(colunas[3]);
 
                 Produto produto = new Produto(
                         sku,
@@ -64,6 +79,20 @@ public class LeitorCsvProduto {
             return preco;
         } catch (NumberFormatException exception) {
             throw new BadRequestException("O preço \"" + precoTexto + "\" é inválido.");
+        }
+    }
+
+    private Integer converterEstoque(String estoqueTexto) {
+        try {
+            Integer estoque = Integer.valueOf(estoqueTexto.trim());
+
+            if (estoque < 0) {
+                throw new BadRequestException("O estoque não pode ser negativo.");
+            }
+
+            return estoque;
+        } catch (NumberFormatException exception) {
+            throw new BadRequestException("O estoque \"" + estoqueTexto + "\" é inválido.");
         }
     }
 }
